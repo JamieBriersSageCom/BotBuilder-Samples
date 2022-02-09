@@ -10,6 +10,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.BotBuilderSamples.Bots;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Bot.Connector.Authentication;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Identity.Web;
+using Microsoft.BotBuilderSamples.Services.Interfaces;
+using Microsoft.BotBuilderSamples.Services;
+using Microsoft.BotBuilderSamples.Models;
+using NetCoreForce.Client;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -25,6 +31,15 @@ namespace Microsoft.BotBuilderSamples
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<AppSettings>(Configuration);
+            var appSettings = Configuration.Get<AppSettings>();
+
+            services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+                .AddMicrosoftIdentityWebApp(Configuration, "AzureAd")
+                .EnableTokenAcquisitionToCallDownstreamApi(new string[] { "Calendar.ReadWrite" })
+                .AddMicrosoftGraph(Configuration.GetSection("GraphBeta"))
+                .AddInMemoryTokenCaches();
+
             services.AddHttpClient().AddControllers().AddNewtonsoftJson();
 
             // Create the Bot Framework Authentication to be used with the Bot Adapter.
@@ -35,6 +50,13 @@ namespace Microsoft.BotBuilderSamples
 
             // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
             services.AddTransient<IBot, TeamsConversationBot>();
+
+            services.AddTransient<IGraphApiService, GraphApiService>();
+
+            var salesforceAuth = new AuthenticationClient();
+            salesforceAuth.UsernamePassword(appSettings.Salesforce.ClientId, appSettings.Salesforce.ClientSecret, appSettings.Salesforce.Username, appSettings.Salesforce.Password, "https://test.salesforce.com/services/oauth2/token");
+            var client = new ForceClient(salesforceAuth.AccessInfo.InstanceUrl, salesforceAuth.ApiVersion, salesforceAuth.AccessInfo.AccessToken);
+            services.AddSingleton(client);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -44,6 +66,8 @@ namespace Microsoft.BotBuilderSamples
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseAuthentication();
 
             app.UseDefaultFiles()
                 .UseStaticFiles()
