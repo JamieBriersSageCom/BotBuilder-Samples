@@ -67,11 +67,11 @@
             },
             {
               "title": "Start",
-              "value": "{{DATE(${absence.start}, SHORT)}}"
+              "value": "${absence.start}"
             },
             {
               "title": "End",
-              "value": "{{DATE(${absence.end}, SHORT)}}"
+              "value": "${absence.end}"
             },
             {
               "title": "Duration",

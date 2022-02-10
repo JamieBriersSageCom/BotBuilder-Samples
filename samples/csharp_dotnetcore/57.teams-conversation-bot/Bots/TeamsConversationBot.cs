@@ -38,6 +38,50 @@ namespace Microsoft.BotBuilderSamples.Bots
         private readonly string _adaptiveCardTemplate = Path.Combine(".", "Resources", "UserMentionCardTemplate.json");
         private readonly string _absenceCardTemplate = Path.Combine(".", "Resources", "AbsenceCardTemplate.json");
 
+        protected override async Task<AdaptiveCardInvokeResponse> OnAdaptiveCardInvokeAsync(ITurnContext<IInvokeActivity> turnContext, AdaptiveCardInvokeValue value, CancellationToken cancellationToken)
+        {
+
+            var templateJSON = System.IO.File.ReadAllText(_absenceCardTemplate);
+            AdaptiveCardTemplate template = new AdaptiveCardTemplate(templateJSON);
+            var memberData = new
+            {
+                title = "has booked an absence UPDATED",
+                description = "An absence requires your approval",
+                createdUtc = "2017-02-14T06:08:39Z",
+                viewUrl = "https://adaptivecards.io",
+                absence = new
+                {
+                    //teamMemberName = absence.TeamMemberName,// "Jay Briers",
+                    //teamMemberImg = "https://pbs.twimg.com/profile_images/3647943215/d7f12830b3c17a5a9e4afcc370e3a37e_400x400.jpeg",
+                    //start = absence.Start.ToShortDateString(), //"2022-02-14T06:08:39Z",
+                    //end = absence.End.ToShortDateString(), //"2022-02-15T06:08:39Z",
+                    //duration = ((int)absence.Duration), //"1 Day",
+                    //reason = absence.Reason, //"Sickness"
+                }
+            };
+            string cardJSON = template.Expand(memberData);
+            var adaptiveCardAttachment = new Bot.Schema.Attachment
+            {
+                ContentType = "application/vnd.microsoft.card.adaptive",
+                Content = JsonConvert.DeserializeObject(cardJSON),
+            };
+            Activity updateActivity = new Activity()
+            {
+                Id = turnContext.Activity.ReplyToId,
+                Attachments = new List<Attachment> { adaptiveCardAttachment }
+            };
+            //await turnContext.SendActivityAsync(MessageFactory.Attachment(adaptiveCardAttachment), cancellationToken);
+            await turnContext.UpdateActivityAsync(updateActivity, cancellationToken);
+
+            var response = new AdaptiveCardInvokeResponse()
+            {
+                StatusCode = 200,
+                Type = null,
+                Value = null
+            };
+            return response;
+        }
+
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
             turnContext.Activity.RemoveRecipientMention();
