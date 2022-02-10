@@ -75,7 +75,7 @@
             },
             {
               "title": "Duration",
-              "value": "${absence.duration} days"
+              "value": "${absence.duration}"
             }
           ]
         }
@@ -98,6 +98,16 @@
           "type": "Action.OpenUrl",
           "title": "Open In Sage People",
           "url": "approveUrl"
+        },
+        {
+          "type": "Action.Submit",
+          "title": "Auth?",
+          "data": {
+            "msteams": {
+              "type": "signin",
+              "value": "https://enterprise-app-6292-dev-ed.cs119.my.salesforce.com/services/oauth2/authorize?client_id=3MVG9xqN3LZmHU7ne59iUJuqKXpcWor5Wo_yEXK58uRsBPWKeSZMhTDkdsajSTD97gku_7Pdh4vMydTNndDCz&redirect_uri=https://login.salesforce.com/services/oauth2/callback&response_type=code"
+            }
+          }
         }
       ]
     }
