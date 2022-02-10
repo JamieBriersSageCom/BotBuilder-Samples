@@ -18,6 +18,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using AdaptiveCards.Templating;
 using Newtonsoft.Json;
+using Microsoft.Identity.Web;
 
 namespace Microsoft.BotBuilderSamples.Bots
 {
@@ -25,14 +26,17 @@ namespace Microsoft.BotBuilderSamples.Bots
     {
         private string _appId;
         private string _appPassword;
+        private readonly ITokenAcquisition _tokenAcquisition;
 
-        public TeamsConversationBot(IConfiguration config)
+        public TeamsConversationBot(ITokenAcquisition tokenAcquisition, IConfiguration config)
         {
+            _tokenAcquisition = tokenAcquisition;
             _appId = config["MicrosoftAppId"];
             _appPassword = config["MicrosoftAppPassword"];
         }
 
         private readonly string _adaptiveCardTemplate = Path.Combine(".", "Resources", "UserMentionCardTemplate.json");
+        private readonly string _absenceCardTemplate = Path.Combine(".", "Resources", "AbsenceCardTemplate.json");
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
@@ -43,16 +47,31 @@ namespace Microsoft.BotBuilderSamples.Bots
                 await MentionAdaptiveCardActivityAsync(turnContext, cancellationToken);
             else if (text.Contains("mention"))
                 await MentionActivityAsync(turnContext, cancellationToken);
-            else if(text.Contains("who"))
+            else if (text.Contains("who"))
                 await GetSingleMemberAsync(turnContext, cancellationToken);
-            else if(text.Contains("update"))
+            else if (text.Contains("update"))
                 await CardActivityAsync(turnContext, true, cancellationToken);
-            else if(text.Contains("message"))
+            else if (text.Contains("message"))
                 await MessageAllMembersAsync(turnContext, cancellationToken);
-            else if(text.Contains("delete"))
+            else if (text.Contains("delete"))
                 await DeleteCardActivityAsync(turnContext, cancellationToken);
+            else if (text.Contains("absence"))
+                await ShowAbsenceInfo(turnContext, cancellationToken);
             else
                 await CardActivityAsync(turnContext, false, cancellationToken);
+        }
+
+        protected override async Task OnInstallationUpdateActivityAsync(ITurnContext<IInstallationUpdateActivity> turnContext, CancellationToken cancellationToken)
+        {
+            var activity = turnContext.Activity;
+            if(string.Equals(activity.Action, "Add", StringComparison.InvariantCultureIgnoreCase))
+            {
+                await turnContext.SendActivityAsync(MessageFactory.Text($"Welcome to the team."), cancellationToken);
+            }
+            else
+            { // TO:DO Uninstallation workflow
+            }
+            return;
         }
 
         protected override async Task OnTeamsMembersAddedAsync(IList<TeamsChannelAccount> membersAdded, TeamInfo teamInfo, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
@@ -107,6 +126,37 @@ namespace Microsoft.BotBuilderSamples.Bots
                 await SendWelcomeCard(turnContext, card, cancellationToken);
             }
 
+        }
+
+        private async Task ShowAbsenceInfo(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
+        {
+            var templateJSON = File.ReadAllText(_absenceCardTemplate);
+            AdaptiveCardTemplate template = new AdaptiveCardTemplate(templateJSON);
+            var memberData = new
+            {
+                title = "has booked an absence",
+                description = "An absence requires your approval",
+                createdUtc = "2017-02-14T06:08:39Z",
+                viewUrl = "https://adaptivecards.io",
+                absence = new
+                {
+                    teamMemberName = "Jay Briers",
+                    teamMemberImg = "https://pbs.twimg.com/profile_images/3647943215/d7f12830b3c17a5a9e4afcc370e3a37e_400x400.jpeg",
+                    start = "2022-02-14T06:08:39Z",
+                    end = "2022-02-15T06:08:39Z",
+                    duration = "1 Day",
+                    reason = "Sickness"
+                }
+            };
+            string cardJSON = template.Expand(memberData);
+            var adaptiveCardAttachment = new Attachment
+            {
+                ContentType = "application/vnd.microsoft.card.adaptive",
+                Content = JsonConvert.DeserializeObject(cardJSON),
+            };
+            await turnContext.SendActivityAsync(MessageFactory.Attachment(adaptiveCardAttachment), cancellationToken);
+
+            //var res = await turnContext.SendActivityAsync(message);
         }
 
         private async Task GetSingleMemberAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)

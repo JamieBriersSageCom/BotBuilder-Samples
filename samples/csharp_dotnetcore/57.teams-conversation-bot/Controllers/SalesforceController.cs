@@ -1,4 +1,4 @@
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Web;
@@ -41,7 +41,8 @@ namespace Microsoft.BotBuilderSamples.Controllers
 
             var accessToken = await tokenAcquisition.GetAccessTokenForAppAsync("https://graph.microsoft.com/.default");
             var eventResponse = await graphApiService.AddEventToCalendar(accessToken, absenceEvent.CalendarId, newEvent, cancellationToken);
-            return Ok(eventResponse);
+            var notificationResponse = await graphApiService.NotifyUserInChat(accessToken, absenceEvent.CalendarId, absence, cancellationToken);
+            return Ok(notificationResponse);
         }
 
         public class AbsenceRequest
