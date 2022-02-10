@@ -1,14 +1,14 @@
 {
   "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
   "type": "AdaptiveCard",
-  "version": "1.4",
+  "version": "1.3",
   "body": [
     {
       "type": "Container",
       "items": [
         {
           "type": "TextBlock",
-          "text": "${$root.absence.teamMemberName} ${$root.title}",
+          "text": "${absence.teamMemberName} ${title}",
           "weight": "bolder",
           "size": "medium"
         },
@@ -21,7 +21,7 @@
               "items": [
                 {
                   "type": "Image",
-                  "url": "${$root.absence.teamMemberImg}",
+                  "url": "${absence.teamMemberImg}",
                   "size": "Small",
                   "style": "Person"
                 }
@@ -33,14 +33,14 @@
               "items": [
                 {
                   "type": "TextBlock",
-                  "text": "${$root.absence.teamMemberName}",
+                  "text": "${absence.teamMemberName}",
                   "weight": "Bolder",
                   "wrap": true
                 },
                 {
                   "type": "TextBlock",
                   "spacing": "None",
-                  "text": "Created {{DATE(${$root.createdUtc}, SHORT)}}",
+                  "text": "Created {{DATE(${createdUtc}, SHORT)}}",
                   "isSubtle": true,
                   "wrap": true
                 }
@@ -66,8 +66,8 @@
               "value": "${absence.reason}"
             },
             {
-              "title": "{{DATE(${absence.start}, SHORT)}}",
-              "value": "hello"
+              "title": "Start",
+              "value": "{{DATE(${absence.start}, SHORT)}}"
             },
             {
               "title": "End",
@@ -98,16 +98,6 @@
           "type": "Action.OpenUrl",
           "title": "Open In Sage People",
           "url": "approveUrl"
-        },
-        {
-          "type": "Action.Submit",
-          "title": "Auth?",
-          "data": {
-            "msteams": {
-              "type": "signin",
-              "value": "https://enterprise-app-6292-dev-ed.cs119.my.salesforce.com/services/oauth2/authorize?client_id=3MVG9xqN3LZmHU7ne59iUJuqKXpcWor5Wo_yEXK58uRsBPWKeSZMhTDkdsajSTD97gku_7Pdh4vMydTNndDCz&redirect_uri=https://login.salesforce.com/services/oauth2/callback&response_type=code"
-            }
-          }
         }
       ]
     }
