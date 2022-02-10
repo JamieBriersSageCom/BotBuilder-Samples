@@ -51,12 +51,12 @@ namespace Microsoft.BotBuilderSamples.Bots
                 viewUrl = "https://adaptivecards.io",
                 absence = new
                 {
-                    //teamMemberName = absence.TeamMemberName,// "Jay Briers",
-                    //teamMemberImg = "https://pbs.twimg.com/profile_images/3647943215/d7f12830b3c17a5a9e4afcc370e3a37e_400x400.jpeg",
-                    //start = absence.Start.ToShortDateString(), //"2022-02-14T06:08:39Z",
-                    //end = absence.End.ToShortDateString(), //"2022-02-15T06:08:39Z",
-                    //duration = ((int)absence.Duration), //"1 Day",
-                    //reason = absence.Reason, //"Sickness"
+                    teamMemberName = "Jay Briers",
+                    teamMemberImg = "https://pbs.twimg.com/profile_images/3647943215/d7f12830b3c17a5a9e4afcc370e3a37e_400x400.jpeg",
+                    start = "2022-02-14T06:08:39Z",
+                    end = "2022-02-15T06:08:39Z",
+                    duration = "1 Day",
+                    reason = "Sickness"
                 }
             };
             string cardJSON = template.Expand(memberData);
@@ -68,6 +68,7 @@ namespace Microsoft.BotBuilderSamples.Bots
             Activity updateActivity = new Activity()
             {
                 Id = turnContext.Activity.ReplyToId,
+                Type = "message",
                 Attachments = new List<Attachment> { adaptiveCardAttachment }
             };
             //await turnContext.SendActivityAsync(MessageFactory.Attachment(adaptiveCardAttachment), cancellationToken);

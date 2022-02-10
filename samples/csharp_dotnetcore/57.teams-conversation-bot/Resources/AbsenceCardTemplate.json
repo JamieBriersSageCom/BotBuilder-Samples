@@ -85,7 +85,9 @@
       "type": "ActionSet",
       "actions": [
         {
-          "type": "Action.Submit",
+          "type": "Action.Execute",
+          "fallback": "Action.Submit",
+          "verb": "approve",
           "title": "Approve",
           "style": "positive"
         },
