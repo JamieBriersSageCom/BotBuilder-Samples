@@ -1,4 +1,4 @@
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Web;
@@ -35,13 +35,14 @@ namespace Microsoft.BotBuilderSamples.Controllers
                 Subject = absence.AbsenceName + " For " + absence.TeamMemberName,
                 ShowAs = FreeBusyStatus.Oof,
                 IsAllDay = true,
-                Start = DateTimeTimeZone.FromDateTime(DateTime.Parse(absence.Start), "Europe/London"),
-                End = DateTimeTimeZone.FromDateTime(DateTime.Parse(absence.End).AddDays(1), "Europe/London"),
+                Start = DateTimeTimeZone.FromDateTime(absence.Start, "Europe/London"),
+                End = DateTimeTimeZone.FromDateTime(absence.End.AddDays(1), "Europe/London"),
             };
 
             var accessToken = await tokenAcquisition.GetAccessTokenForAppAsync("https://graph.microsoft.com/.default");
             var eventResponse = await graphApiService.AddEventToCalendar(accessToken, absenceEvent.CalendarId, newEvent, cancellationToken);
-            return Ok(eventResponse);
+            var notificationResponse = await graphApiService.NotifyUserInChat(accessToken, absenceEvent.CalendarId, absence, cancellationToken);
+            return Ok(notificationResponse);
         }
 
         public class AbsenceRequest
@@ -56,10 +57,10 @@ namespace Microsoft.BotBuilderSamples.Controllers
             public string Id { get; set; }
 
             [JsonProperty("fHCM2__Start_Date__c")]
-            public string Start { get; set; }
+            public DateTime Start { get; set; }
 
             [JsonProperty("fHCM2__End_Date__c")]
-            public string End { get; set; }
+            public DateTime End { get; set; }
 
             [JsonProperty("fHCM2__Type__c")]
             public string AbsenceName { get; set; }
@@ -67,6 +68,11 @@ namespace Microsoft.BotBuilderSamples.Controllers
             [JsonProperty("fHCM2__Team_Member_Name__c")]
             public string TeamMemberName { get; set; }
 
+            [JsonProperty("fHCM2__Days__c")]
+            public double Duration { get; set; }
+
+            [JsonProperty("fHCM2__Reason__c")]
+            public string Reason { get; set; }
         }
     }
 }
